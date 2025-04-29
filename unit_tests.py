@@ -1,5 +1,6 @@
 import unittest
-from compiler import Lexer, Token, TokenType
+from compiler import Token, TokenType
+from lexer import Lexer
 
 class TestLexer(unittest.TestCase):
   def test_upper(self):
