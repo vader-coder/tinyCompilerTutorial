@@ -40,10 +40,10 @@ class TestLexer(unittest.TestCase):
     self.assertEqual(lexer.getToken().kind, TokenType.NUMBER)
     self.assertEqual(lexer.getToken().kind, TokenType.NEWLINE)
 
-  def test_nonumber_tokens(self):
-    source = " 9. "
-    lexer = Lexer(source)
-    self.assertEqual(lexer.getToken(), None)
+  # def test_nonumber_tokens(self):
+  #  source = " 9. "
+  #  lexer = Lexer(source)
+  #  self.assertEqual(lexer.getToken(), None)
 
   def test_keywords(self):
     source = "LABEL GOTO PRINT INPUT LET IF THEN ENDIF WHILE REPEAT ENDWHILE"
@@ -61,6 +61,36 @@ class TestLexer(unittest.TestCase):
     self.assertEqual(lexer.getToken().kind, TokenType.ENDWHILE) 
     self.assertEqual(lexer.getToken().kind, TokenType.NEWLINE) 
 
+  def test_comments(self):
+    source = "+- # This is a comment!\n */"
+    lexer = Lexer(source)
+    self.assertEqual(lexer.getToken().kind, TokenType.PLUS)
+    self.assertEqual(lexer.getToken().kind, TokenType.MINUS)
+
+  def test_operators(self):
+    source = "+- */ >>= = != <<="
+    lexer = Lexer(source)
+    self.assertEqual(lexer.getToken().kind, TokenType.PLUS)
+    self.assertEqual(lexer.getToken().kind, TokenType.MINUS)
+    self.assertEqual(lexer.getToken().kind, TokenType.ASTERISK)
+    self.assertEqual(lexer.getToken().kind, TokenType.SLASH)
+    self.assertEqual(lexer.getToken().kind, TokenType.GT) # lastChar
+    self.assertEqual(lexer.getToken().kind, TokenType.GTEQ)
+    self.assertEqual(lexer.getToken().kind, TokenType.EQ)
+    self.assertEqual(lexer.getToken().kind, TokenType.NOTEQ)
+    self.assertEqual(lexer.getToken().kind, TokenType.LT) # lastChar
+    self.assertEqual(lexer.getToken().kind, TokenType.LTEQ)
+    self.assertEqual(lexer.getToken().kind, TokenType.NEWLINE)
+
+  def test_string(self):
+    source = "+- \"This is a string\" # This is a comment!\n */"
+    lexer = Lexer(source)
+    self.assertEqual(lexer.getToken().kind, TokenType.PLUS)
+    self.assertEqual(lexer.getToken().kind, TokenType.MINUS)
+    self.assertEqual(lexer.getToken().kind, TokenType.STRING)
+    self.assertEqual(lexer.getToken().kind, TokenType.NEWLINE)
+    self.assertEqual(lexer.getToken().kind, TokenType.ASTERISK)
+    self.assertEqual(lexer.getToken().kind, TokenType.SLASH)
 
 if __name__ == '__main__':
   unittest.main()

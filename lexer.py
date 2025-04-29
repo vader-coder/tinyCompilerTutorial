@@ -1,4 +1,5 @@
 from enum import Enum
+import sys
 from tokens import Token, TokenType
 
 class Lexer:
@@ -20,20 +21,23 @@ class Lexer:
       return '\0' # end of file
     else:
       return self.source[self.curPos + 1]
-
-  def abort(self, message):
-    pass
+  
+  def abort(message):
+    sys.exit("Lexing error. " + message)
 
   def skipWhitespace(self):
     while self.curChar == ' ' or self.curChar == '\t' or self.curChar == '\r':
       self.nextChar()
 
   def skipComment(self):
-    pass
+    if self.curChar == '#':
+        while self.curChar != '\n':
+            self.nextChar()
 
   def getToken(self):
     token = None
     self.skipWhitespace()
+    self.skipComment()
 
     if self.curChar == '+':
       token = Token(self.curChar, TokenType.PLUS)
@@ -55,15 +59,15 @@ class Lexer:
       else:
         token = Token(self.curChar, TokenType.EQ)
     elif self.curChar == '>':
+      lastChar = self.curChar
       if self.peek() == '=':
-        lastChar = self.curChar
         self.nextChar()
         token = Token(f"{lastChar}{self.curChar}", TokenType.GTEQ)
       else:
         token = Token(f"{lastChar}{self.curChar}", TokenType.GT)
     elif self.curChar == '<':
+      lastChar = self.curChar
       if self.peek() == '=':
-        lastChar = self.curChar
         self.nextChar()
         token = Token(f"{lastChar}{self.curChar}", TokenType.LTEQ)
       else:
@@ -98,8 +102,20 @@ class Lexer:
         token = Token(tokenText, TokenType.IDENT)
       else:
         token = Token(tokenText, keywordKind)
+    elif self.curChar == '\"':
+        # handle strings
+        self.nextChar()
+        startPos = self.curPos
+        while self.curChar != '\"':
+          # No special characters
+          if self.curChar == '\r' or self.curChar == '\n' or self.curChar == '\t' or self.curChar == '\\' or self.curChar == '%':
+            self.abort("Illegal character in string: " + self.curChar)
+          self.nextChar()
+        tokenText = self.source[startPos : self.curPos]    
+        token = Token(tokenText, TokenType.STRING)    
     else:
       # Unknown token!
-      pass
+      self.abort("Unknown token: " + self.curChar)
+
     self.nextChar()
     return token
