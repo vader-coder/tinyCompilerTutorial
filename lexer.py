@@ -1,11 +1,11 @@
 from enum import Enum
-from compiler import Token, TokenType
+from tokens import Token, TokenType
 
 class Lexer:
   def __init__(self, source):
     self.source = source + '\n'
     self.curChar = ''
-    self.curPos = -1
+    self.curPos = -1 # pointer to current index in source
     self.nextChar()
   
   def nextChar(self):
