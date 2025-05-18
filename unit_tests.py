@@ -1,10 +1,13 @@
 import unittest
 from tokens import Token, TokenType
 from lexer import Lexer
+from parser import Parser
 
 class TestLexer(unittest.TestCase):
   def test_upper(self):
     self.assertEqual('foo'.upper(), 'FOO')
+
+  ## lexer
 
   def test_character_detection(self):
     source = "LET foobar = 123"
@@ -91,6 +94,12 @@ class TestLexer(unittest.TestCase):
     self.assertEqual(lexer.getToken().kind, TokenType.NEWLINE)
     self.assertEqual(lexer.getToken().kind, TokenType.ASTERISK)
     self.assertEqual(lexer.getToken().kind, TokenType.SLASH)
+
+  ## parser
+  def test_print(self):
+    source = "PRINT \"Hello world\""
+    parser = Parser(Lexer(source))
+    parser.program()
 
 if __name__ == '__main__':
   unittest.main()
