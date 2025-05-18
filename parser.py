@@ -7,6 +7,10 @@ class Parser:
   
   def __init__(self, lexer):
     self.lexer = lexer
+    self.symbols = set()
+    self.labelsDeclared = set()
+    self.labelsGotoed = set()
+
     self.curToken = None
     self.peekToken = None
     self.nextToken()
@@ -34,20 +38,113 @@ class Parser:
 
   # loop over tokens until we reach end of file
   def program(self):
+    while(self.checkToken(TokenType.NEWLINE)):
+      self.nextToken()
+
     while not self.checkToken(TokenType.EOF):
       self.statement()
   
   def statement(self):
+    # statement ::= "PRINT" (expression | string) nl
     if self.checkToken(TokenType.PRINT):
       self.nextToken()
       if self.checkToken(TokenType.STRING):
         self.nextToken()
       else:
         self.expression()
+    
+    # "IF" comparison "THEN" {statement} "ENDIF"
+    elif self.checkToken(TokenType.IF):
+      self.nextToken()
+      self.comparison()
+      
+      self.match(TokenType.THEN)
+      self.newline()
+
+      while not self.checkToken(TokenType.ENDIF):
+        self.statement()
+      self.match(TokenType.ENDIF)
+    
+    # "WHILE" comparison "REPEAT" {statement} "ENDWHILE"
+    elif self.checkToken(TokenType.WHILE):
+      self.nextToken()
+      self.comparision()
+      self.match(TokenType.REPEAT)
+      self.newline()
+
+      while not self.checkToken(TokenType.ENDWHILE):
+        self.statement()
+      self.match(TokenType.ENDWHILE)
+
+    # "LABEL" ident nl
+    elif self.checkToken(TokenType.LABEL):
+      self.nextToken()
+      self.match(TokenType.IDENT)
+
+    # "GOTO" ident nl
+    elif self.checkToken(TokenType.GOTO):
+      self.nextToken()
+      self.match(TokenType.IDENT)
+
+    # "LET" ident "=" expression
+    elif self.checkToken(TokenType.LET):
+      self.nextToken()
+      self.match(TokenType.IDENT)
+      self.match(TokenType.EQ)
+      self.expression()
+
+    # "INPUT" ident
+    elif self.checkToken(TokenType.INPUT):
+      self.nextToken()
+      self.match(TokenType.IDENT)
+
     self.newline()
 
+  # comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
+  def comparison(self):
+    self.expression()
+    if self.isComparisionOperator():
+      self.nextToken()
+      self.expression()
+    else:
+      self.abort("Expected comparison operator at: " + self.curToken.text)
+    
+    while self.isComparisionOperator():
+      self.nextToken()
+      self.expression()
+
+    def isComparisionOperator(self):
+      return self.checkToken(TokenType.GT) or self.checkToken(TokenType.GTEQ) or self.checkToken(TokenType.LT) or self.checkToken(TokenType.LTEQ) or self.checkToken(TokenType.EQEQ) or self.checkToken(TokenType.NOTEQ)
+  
+  # expression ::= term {( "-" | "+" ) term}
   def expression(self):
-    pass
+    self.term()
+    while self.checkToken(TokenType.PLUS) or self.checkToken(TokenType.MINUS):
+      self.nextToken()
+      self.term()
+  
+  # term ::= unary {( "/" | "*" ) unary}
+  def term(self):
+    self.unary()
+
+    while self.checkToken(TokenType.ASTERISK) or self.checkToken(TokenType.SLASH):
+      self.nextToken()
+      self.unary()
+
+  # unary ::= ["+" | "-"] primary
+  def unary(self):
+    if self.checkToken(TokenType.PLUS) or self.checkToken(TokenType.MINUS):
+      self.nextToken()
+    self.primary()
+  
+  # primary ::= number | ident
+  def primary(self):
+    if self.checkToken(TokenType.NUMBER):
+      self.nextToken()
+    elif self.checkToken(TokenType.IDENT):
+      self.nextToken()
+    else:
+      self.abort("Unexpected token at " + self.curToken.text)
   
   # advance token pointers for each newline. 
   def newline(self):
