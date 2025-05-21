@@ -1,12 +1,15 @@
 from tokens import Token, TokenType
 from lexer import Lexer
+from emitter import Emitter
 
 # parser: https://austinhenley.com/blog/teenytinycompiler2.html
 # need to make sure code follows correct grammar
 class Parser:
   
-  def __init__(self, lexer):
+  def __init__(self, lexer, emitter):
     self.lexer = lexer
+    self.emitter = emitter
+
     self.symbols = set()
     self.labelsDeclared = set()
     self.labelsGotoed = set()
@@ -38,11 +41,17 @@ class Parser:
 
   # loop over tokens until we reach end of file
   def program(self):
+    self.emitter.headerLine("#include <stdio.h>")
+    self.emitter.headerLine("int main(void) {")
+
     while(self.checkToken(TokenType.NEWLINE)):
       self.nextToken()
 
     while not self.checkToken(TokenType.EOF):
       self.statement()
+
+    self.emitter.emitLine("return 0;")
+    self.emitter.emitLine("}")
 
     for label in self.labelsGotoed:
       if label not in self.labelsDeclared:
