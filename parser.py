@@ -73,25 +73,32 @@ class Parser:
     # "IF" comparison "THEN" {statement} "ENDIF"
     elif self.checkToken(TokenType.IF):
       self.nextToken()
+      self.emitter.emit("if (")
       self.comparison()
       
       self.match(TokenType.THEN)
       self.newline()
+      self.emitter.emitLine("}")
 
       while not self.checkToken(TokenType.ENDIF):
         self.statement()
       self.match(TokenType.ENDIF)
+      self.emitter.emitLine("}")
     
     # "WHILE" comparison "REPEAT" {statement} "ENDWHILE"
     elif self.checkToken(TokenType.WHILE):
       self.nextToken()
+      self.emitter.emit("while (")
       self.comparison()
+      
       self.match(TokenType.REPEAT)
       self.newline()
+      self.emitter.emitLine("){")
 
       while not self.checkToken(TokenType.ENDWHILE):
         self.statement()
       self.match(TokenType.ENDWHILE)
+      self.emitter.emitLine("}")
 
     # "LABEL" ident nl
     elif self.checkToken(TokenType.LABEL):
@@ -101,12 +108,15 @@ class Parser:
         self.abort("Label already exists" + self.curToken.text)
       self.labelsDeclared.add(self.curToken.text)
 
+      self.emitter.emitLine(self.curToken.text + ":")
       self.match(TokenType.IDENT)
 
     # "GOTO" ident nl
     elif self.checkToken(TokenType.GOTO):
       self.nextToken()
       self.labelsGotoed.add(self.curToken.text)
+      
+      self.emitter.emitLine("goto " + self.curToken.text)
       self.match(TokenType.IDENT)
 
     # "LET" ident "=" expression
@@ -115,10 +125,14 @@ class Parser:
 
       if self.curToken.text not in self.symbols:
         self.symbols.add(self.curToken.text)
+        self.emitter.headerLine("float " + self.curToken.text + ";")
 
+      self.emitter.emit(self.curToken.text + " = ")
       self.match(TokenType.IDENT)
       self.match(TokenType.EQ)
+
       self.expression()
+      self.emitter.emitLine(";")
 
     # "INPUT" ident
     elif self.checkToken(TokenType.INPUT):
