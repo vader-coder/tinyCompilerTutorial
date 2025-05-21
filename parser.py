@@ -62,9 +62,13 @@ class Parser:
     if self.checkToken(TokenType.PRINT):
       self.nextToken()
       if self.checkToken(TokenType.STRING):
+        self.emitter.emitLine("printf(\"" + self.curToken.text + "\\n\");")
         self.nextToken()
       else:
+        # print expression result as a float
+        self.emitter.emit("printf(\"%" + ".2f\\n\", (float)(")
         self.expression()
+        self.emitter.emitLine("));")
     
     # "IF" comparison "THEN" {statement} "ENDIF"
     elif self.checkToken(TokenType.IF):
