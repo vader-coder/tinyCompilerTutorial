@@ -43,6 +43,10 @@ class Parser:
 
     while not self.checkToken(TokenType.EOF):
       self.statement()
+
+    for label in self.labelsGotoed:
+      if label not in self.labelsDeclared:
+        self.abort("Cannot GOTO undeclared label " + label)
   
   def statement(self):
     # statement ::= "PRINT" (expression | string) nl
@@ -68,7 +72,7 @@ class Parser:
     # "WHILE" comparison "REPEAT" {statement} "ENDWHILE"
     elif self.checkToken(TokenType.WHILE):
       self.nextToken()
-      self.comparision()
+      self.comparison()
       self.match(TokenType.REPEAT)
       self.newline()
 
@@ -79,16 +83,26 @@ class Parser:
     # "LABEL" ident nl
     elif self.checkToken(TokenType.LABEL):
       self.nextToken()
+      
+      if self.curToken.text in self.labelsDeclared:
+        self.abort("Label already exists" + self.curToken.text)
+      self.labelsDeclared.add(self.curToken.text)
+
       self.match(TokenType.IDENT)
 
     # "GOTO" ident nl
     elif self.checkToken(TokenType.GOTO):
       self.nextToken()
+      self.labelsGotoed.add(self.curToken.text)
       self.match(TokenType.IDENT)
 
     # "LET" ident "=" expression
     elif self.checkToken(TokenType.LET):
       self.nextToken()
+
+      if self.curToken.text not in self.symbols:
+        self.symbols.add(self.curToken.text)
+
       self.match(TokenType.IDENT)
       self.match(TokenType.EQ)
       self.expression()
@@ -96,6 +110,10 @@ class Parser:
     # "INPUT" ident
     elif self.checkToken(TokenType.INPUT):
       self.nextToken()
+
+      if self.curToken.text not in self.symbols:
+        self.symbols.add(self.curToken.text)
+
       self.match(TokenType.IDENT)
 
     self.newline()
@@ -103,18 +121,18 @@ class Parser:
   # comparison ::= expression (("==" | "!=" | ">" | ">=" | "<" | "<=") expression)+
   def comparison(self):
     self.expression()
-    if self.isComparisionOperator():
+    if self.isComparisonOperator():
       self.nextToken()
       self.expression()
     else:
       self.abort("Expected comparison operator at: " + self.curToken.text)
     
-    while self.isComparisionOperator():
+    while self.isComparisonOperator():
       self.nextToken()
       self.expression()
 
-    def isComparisionOperator(self):
-      return self.checkToken(TokenType.GT) or self.checkToken(TokenType.GTEQ) or self.checkToken(TokenType.LT) or self.checkToken(TokenType.LTEQ) or self.checkToken(TokenType.EQEQ) or self.checkToken(TokenType.NOTEQ)
+  def isComparisonOperator(self):
+    return self.checkToken(TokenType.GT) or self.checkToken(TokenType.GTEQ) or self.checkToken(TokenType.LT) or self.checkToken(TokenType.LTEQ) or self.checkToken(TokenType.EQEQ) or self.checkToken(TokenType.NOTEQ)
   
   # expression ::= term {( "-" | "+" ) term}
   def expression(self):
@@ -142,6 +160,8 @@ class Parser:
     if self.checkToken(TokenType.NUMBER):
       self.nextToken()
     elif self.checkToken(TokenType.IDENT):
+      if self.curToken.text not in self.symbols:
+        self.abort("Referencing variable before assignment: " + self.curToken.text)
       self.nextToken()
     else:
       self.abort("Unexpected token at " + self.curToken.text)

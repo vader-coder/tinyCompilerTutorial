@@ -101,5 +101,12 @@ class TestLexer(unittest.TestCase):
     parser = Parser(Lexer(source))
     parser.program()
 
+  def test_parser(self):
+    f = open("test_code.txt")
+    source = f.read()
+    parser = Parser(Lexer(source))
+    parser.program()
+    f.close()
+
 if __name__ == '__main__':
   unittest.main()
