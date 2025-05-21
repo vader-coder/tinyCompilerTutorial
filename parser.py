@@ -142,10 +142,10 @@ class Parser:
         self.symbols.add(self.curToken.text)
         self.emitter.headerLine("float " + self.curToken.text + ";")
       
-      self.emitter.emitLine("if (0 == scanf\"%" +"f\", &" + self.curToken.text + ")) {")
+      self.emitter.emitLine("if (0 == scanf(\"%" +"f\", &" + self.curToken.text + ")) {")
       self.emitter.emitLine(self.curToken.text + " = 0;")
-      self.emitter.emit("scanf\"%")
-      self.emitter.emitLine("*s\";")
+      self.emitter.emit("scanf(\"%")
+      self.emitter.emitLine("*s\");")
       self.emitter.emitLine("}")
       self.match(TokenType.IDENT)
 

@@ -19,6 +19,8 @@ python3 compiler.py test_code.teeny output.c
 
 [https://austinhenley.com/blog/teenytinycompiler2.html](https://austinhenley.com/blog/teenytinycompiler2.html)
 
+Found a bug where it prints `while (nums>>0)` in C code instead of just `>`. 
+
 ## Emitter
 [https://austinhenley.com/blog/teenytinycompiler3.html](https://austinhenley.com/blog/teenytinycompiler3.html)
 
